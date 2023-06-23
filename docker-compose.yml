@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  run-api-locally:
+    container_name: deepstroy-api-local-starter
+    restart: "no"
+    image: tianon/true
+    depends_on:
+      - deepstroy-api
+      - deepstroy-api-postgres
+
+  deepstroy-api:
+    container_name: deepstroy-api
+    image: deepstroy-api:latest
+    restart: unless-stopped
+    networks:
+      - deepstroy-net
+
+  deepstroy-api-postgres:
+    container_name: deepstroy-api-postgres
+    image: postgres:13.3-alpine
+    restart: always
+    volumes:
+      - deepstroy-api-postgres-data:/var/lib/postgresql/data/
+    healthcheck:
+      test: "pg_isready -U $$POSTGRES_USER"
+      timeout: 10s
+      interval: 10s
+      retries: 3
+    networks:
+      - deepstroy-net
+
+volumes:
+  deepstroy-api-postgres-data:
+
+networks:
+  deepstroy-net:
+    driver: bridge
