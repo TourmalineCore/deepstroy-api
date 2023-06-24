@@ -5,6 +5,7 @@
 import datetime
 from http import HTTPStatus
 import json
+import pytz
 # import imagehash
 # from PIL import Image
 from flask import Blueprint, request
@@ -68,3 +69,10 @@ def get_history():
         return json.dumps(response), HTTPStatus.OK
     else:
         return json.dumps([]), HTTPStatus.OK
+
+@forecast_blueprint.route('/result/<id>', methods=['GET'])
+def get_forecasted_file(id):
+    res = requests.get(f'http://deepstroy-model-service:5000/model-service/predict/{id}').text
+    if res != 'Doesnt exist':
+        response = "http://localhost:9211/deepstroy/local/" + json.loads(res)["path"]
+        return json.dumps(response), HTTPStatus.OK
