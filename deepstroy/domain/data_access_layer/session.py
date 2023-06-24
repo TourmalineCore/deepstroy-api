@@ -1,6 +1,6 @@
 from sqlalchemy.orm import sessionmaker
 
-from tourmanique.domain.data_access_layer.engine import app_db_engine_provider
+from deepstroy.domain.data_access_layer.engine import app_db_engine_provider
 
 
 def session():

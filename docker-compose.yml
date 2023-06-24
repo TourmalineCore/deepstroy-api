@@ -8,6 +8,8 @@ services:
     depends_on:
       - deepstroy-api
       - deepstroy-api-postgres
+      - deepstroy-api-rabbitmq
+      - deepstroy-api-s3
 
   deepstroy-api:
     container_name: deepstroy-api
@@ -15,6 +17,15 @@ services:
     restart: unless-stopped
     networks:
       - deepstroy-net
+    build:
+      context: .
+    command: poetry run flask run
+    volumes:
+      - .:/app-workspace
+    ports:
+      - "9200:5000"
+    env_file:
+      - .env
 
   deepstroy-api-postgres:
     container_name: deepstroy-api-postgres
@@ -29,6 +40,46 @@ services:
       retries: 3
     networks:
       - deepstroy-net
+    env_file:
+      - .env
+    ports:
+      - "9210:5432"
+
+
+  deepstroy-api-rabbitmq:
+    container_name: deepstroy-api-rabbitmq
+    image: rabbitmq:3.9.13-management-alpine
+    restart: always
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    networks:
+      - deepstroy-net
+    env_file:
+      - .env
+    ports:
+      - "9213:5672"
+      - "9214:15672"
+
+  deepstroy-api-s3:
+    container_name: deepstroy-api-s3
+    image: minio/minio:latest
+    command: server /data --console-address ":7001"
+    restart: always
+    ports:
+      - "9211:9000"
+      - "9212:7001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    volumes:
+      - ./s3-data:/data
+    networks:
+      - deepstroy-net
+
 
 volumes:
   deepstroy-api-postgres-data:
