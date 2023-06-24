@@ -4,10 +4,11 @@
 # from http import HTTPStatus
 import datetime
 from http import HTTPStatus
-
+import json
 # import imagehash
 # from PIL import Image
 from flask import Blueprint, request
+import requests
 
 from deepstroy.config.rabbitmq_config import rabbitmq_models_exchange_name
 from deepstroy.domain.forecasting_files.forecasting_files import ForecastingFile
@@ -16,16 +17,6 @@ from deepstroy.helpers.s3_helper import S3Helper
 from deepstroy.helpers.s3_paths import create_path_for_file_forecasting
 from deepstroy.modules.forecast.commands.new_file_for_forecasting_command import NewForecastingFileCommand
 
-# from flask_jwt_extended import get_jwt_identity, jwt_required
-
-# from tourmanique.config.rabbitmq_config import rabbitmq_photo_for_models_exchange_name
-# from tourmanique.domain import Photo
-# from tourmanique.helpers.rabbitmq_message_publisher.rabbitmq_message_publisher import RabbitMqMessagePublisher
-# from tourmanique.modules.auth.is_user_has_access import IsUserHasAccess
-# from tourmanique.modules.galleries.queries.get_gallery_query import GetGalleryQuery
-# from tourmanique.modules.forecast.commands.new_photo_command import NewPhotoCommand
-# from tourmanique.helpers.s3_helper import S3Helper
-# from tourmanique.helpers.s3_paths import create_path_for_photo
 
 forecast_blueprint = Blueprint('forecast', __name__, url_prefix='/forecast')
 
@@ -46,7 +37,7 @@ def upload_file_for_forecasting(file_name):
     id = NewForecastingFileCommand().create(forecasting_file_entity)
     message_with_file_parameters = {
         'file_id': id,
-        'path_to_file_in_s3': forecasting_file_entity.path,
+        'path': forecasting_file_entity.path,
     }
 
     RabbitMqMessagePublisher().publish_message_to_exchange(exchange_name=rabbitmq_models_exchange_name,
@@ -54,6 +45,14 @@ def upload_file_for_forecasting(file_name):
 
     return str(id), HTTPStatus.OK
 
+@forecast_blueprint.route('/download-file/<id>', methods=['GET'])
+def get_file_path(id):
+    res = requests.get(f'http://deepstroy-model-service:5000/model-service/predict/{id}').text
+    result_path = "http://localhost:9211/deepstroy/local/" + json.loads(res)["path"]
+    return result_path, HTTPStatus.OK
+
+# @forecast_blueprint.route('/upload-file/<file_name>', methods=['POST'])
+# def
 
 # @photos_blueprint.route('/<int:gallery_id>/upload-photo', methods=['POST'])
 # @jwt_required()
