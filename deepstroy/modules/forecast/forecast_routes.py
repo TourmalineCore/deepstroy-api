@@ -16,7 +16,7 @@ from deepstroy.helpers.rabbitmq_message_publisher.rabbitmq_message_publisher imp
 from deepstroy.helpers.s3_helper import S3Helper
 from deepstroy.helpers.s3_paths import create_path_for_file_forecasting
 from deepstroy.modules.forecast.commands.new_file_for_forecasting_command import NewForecastingFileCommand
-
+from deepstroy.modules.forecast.queries.get_all_files import GetForecastFileQuery
 
 forecast_blueprint = Blueprint('forecast', __name__, url_prefix='/forecast')
 
@@ -51,6 +51,23 @@ def get_file_path(id):
     res = requests.get(f'http://deepstroy-model-service:5000/model-service/predict/{id}').text
     result_path = "http://localhost:9211/deepstroy/local/" + json.loads(res)["path"]
     return result_path, HTTPStatus.OK
+
+@forecast_blueprint.route('/history', methods=['GET'])
+def get_history():
+
+    forecast_files = GetForecastFileQuery().all()
+    response = []
+    if forecast_files:
+        for file in forecast_files:
+            response.append({"id": file.id, "date_of_upload": str(file.date_of_upload)})
+
+        for i in range(len(response)):
+            res = requests.get(f'http://deepstroy-model-service:5000/model-service/predict/{response[i]["id"]}').text
+            response[i]["path"] = "http://localhost:9211/deepstroy/local/" + json.loads(res)["path"]
+
+        return json.dumps(response), HTTPStatus.OK
+    else:
+        return 'History is empty', HTTPStatus.OK
 
 # @forecast_blueprint.route('/upload-file/<file_name>', methods=['POST'])
 # def
