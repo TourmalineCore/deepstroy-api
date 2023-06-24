@@ -67,7 +67,7 @@ def get_history():
 
         return json.dumps(response), HTTPStatus.OK
     else:
-        return 'History is empty', HTTPStatus.OK
+        return json.dumps([]), HTTPStatus.OK
 
 # @forecast_blueprint.route('/upload-file/<file_name>', methods=['POST'])
 # def
