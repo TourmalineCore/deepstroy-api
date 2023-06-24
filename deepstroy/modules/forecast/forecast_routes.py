@@ -27,7 +27,8 @@ def upload_file_for_forecasting(file_name):
     forecasting_file_entity = ForecastingFile(
                                             file_name=file_name,
                                             date_of_upload=datetime.datetime.utcnow(),
-                                            path=create_path_for_file_forecasting()
+                                            path=create_path_for_file_forecasting(),
+                                            isModeling=False
                                         )
     S3Helper().s3_upload_file(
         file_path_in_bucket=forecasting_file_entity.path,
